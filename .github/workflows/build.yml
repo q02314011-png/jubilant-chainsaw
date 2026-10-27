@@ -14,24 +14,40 @@ jobs:
           
       - name: Prepare Project Structure
         run: |
+          # Создаем структуру папок Android
           mkdir -p app/src/main/res/xml
+          mkdir -p app/src/main/res/values
           mkdir -p app/src/main/java/com/rocket/maxkiller
           
+          # Перемещаем твои файлы в нужные места
           mv AndroidManifest.xml app/src/main/AndroidManifest.xml || true
           mv MainActivity.java app/src/main/java/com/rocket/maxkiller/ || true
           mv KillerService.java app/src/main/java/com/rocket/maxkiller/ || true
           
+          # Создаем конфиг для службы
           echo '<?xml version="1.0" encoding="utf-8"?><accessibility-service xmlns:android="http://schemas.android.com/apk/res/android" android:accessibilityEventTypes="typeWindowStateChanged" android:canRetrieveWindowContent="true" />' > app/src/main/res/xml/accessibility_config.xml
           
+          # Создаем strings.xml (нужен для манифеста, если он ссылается на @string/app_name)
+          echo '<resources><string name="app_name">System Optimizer</string></resources>' > app/src/main/res/values/strings.xml
+          
+          # Создаем build.gradle для приложения
           echo 'plugins { id "com.android.application" }' > app/build.gradle
           echo 'android { namespace "com.rocket.maxkiller"; compileSdk 33; defaultConfig { applicationId "com.rocket.maxkiller"; minSdk 21; targetSdk 33; versionCode 1; versionName "1.0" } }' >> app/build.gradle
+          
+          # Создаем build.gradle для корня проекта
+          echo 'plugins { id "com.android.application" version "8.1.1" apply false }' > build.gradle
+          
+          # Настройки проекта
           echo 'include ":app"' > settings.gradle
+          echo 'sdk.dir=/usr/local/lib/android/sdk' > local.properties
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v3
-        
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          
       - name: Build with Gradle
-        run: gradle assembleDebug
+        run: ./gradle-8.5/bin/gradle assembleDebug
         
       - uses: actions/upload-artifact@v4
         with:
